@@ -2,7 +2,9 @@
 
 namespace App\Api\Car\Entity;
 
+use App\Api\Category\Entity\Category;
 use App\Api\Garage\Entity\GarageInterface;
+use Doctrine\Common\Collections\Collection;
 
 /**
  * Interface CarInterface.
@@ -12,10 +14,10 @@ interface CarInterface
     /**
      * Car id.
      *
-     * @return int
+     * @return string
      *  Unique identifier
      */
-    public function getId(): int;
+    public function getId(): string;
 
     /**
      * Car image.
@@ -116,18 +118,26 @@ interface CarInterface
     /**
      * Car modifications.
      *
-     * @return array
+     * @return Collection<ModificationsInterface>
      *  Modifications
      */
-    public function getModifications(): array;
+    public function getModifications(): Collection;
 
     /**
-     * Set car modifications.
+     * Add modifications.
      *
-     * @param array $modifications
-     *  Modifications
+     * @param Modifications $modification
+     *  Modification
      */
-    public function setModifications(array $modifications): self;
+    public function addModification(Modifications $modification): self;
+
+    /**
+     * Remove modification.
+     *
+     * @param Modifications $modification
+     *  Modification
+     */
+    public function removeModification(Modifications $modification): self;
 
     /**
      * Car horsepower.
@@ -192,4 +202,28 @@ interface CarInterface
      *  Garage
      */
     public function setGarage(?GarageInterface $garage): self;
+
+    /**
+     * Get car categories.
+     *
+     * @return Collection
+     *  Categories
+     */
+    public function getCategories(): Collection;
+
+    /**
+     * Add category.
+     *
+     * @param Category $category
+     *  Category
+     */
+    public function addCategory(Category $category): self;
+
+    /**
+     * Remove category.
+     *
+     * @param Category $category
+     *  Category
+     */
+    public function removeCategory(Category $category): self;
 }

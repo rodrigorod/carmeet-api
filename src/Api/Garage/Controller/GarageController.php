@@ -2,45 +2,79 @@
 
 namespace App\Api\Garage\Controller;
 
-use App\Api\Car\Entity\Car;
-use App\Api\Garage\Entity\Garage;
 use App\Api\Garage\Service\GarageService;
 use App\Controller\EndpointController;
+use App\DependencyInjection\EntityManagerAwareTrait;
+use App\DependencyInjection\LoggerAwareTrait;
 use App\DependencyInjection\SecurityAwareTrait;
 use App\DependencyInjection\ValidatorAwareTrait;
-use Doctrine\ORM\EntityManagerInterface;
 use Exception;
-use Psr\Log\LoggerInterface;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Api\Garage\Entity\Garage;
 
 /**
  * @Route("/api/garage", name="api_garage_")
+ *
+ * @OA\Tag(
+ *     name="Garage",
+ *     description="Garage informations.",
+ * )
  */
 class GarageController extends EndpointController
 {
     use ValidatorAwareTrait;
     use SecurityAwareTrait;
+    use LoggerAwareTrait;
+    use EntityManagerAwareTrait;
 
     public function __construct(
-        protected LoggerInterface $logger,
-        protected EntityManagerInterface $em,
         protected GarageService $garageService,
     ) {}
 
     /**
-     * @Route("/", name="get")
+     * @Route("/", name="get", methods={"GET"})
+     *
+     * @OA\Get(
+     *     operationId="garageGet",
+     *     summary="Get logged-user garage",
+     *     path="/api/garage",
+     *     @OA\Response(
+     *          response="200",
+     *          description="Garage.",
+     *          @OA\JsonContent(ref=@Model(type=Garage::class, groups={"garage", "view"})),
+     *     ),
+     * )
+     *
+     * @Security(name="Bearer")
      */
     public function get(Request $request): Response
     {
         $garage = $this->garageService->getCars($this->getUser()->getId());
 
-        return $this->buildEntityResponse($garage, $request, [], ['view']);
+        return $this->buildEntityResponse($garage, $request, [], ['garage', 'view']);
     }
 
     /**
      * @Route("/init", name="init", methods={"POST"})
+     *
+     * @OA\Post(
+     *     operationId="garageInit",
+     *     summary="Init logged-user garage",
+     *     path="/api/garage/init",
+     *     @OA\Response(
+     *          response="200",
+     *          description="Garage.",
+     *          @OA\JsonContent(ref=@Model(type=Garage::class, groups={"create"})),
+     *     ),
+     *     @OA\Response(response="404", description="An error occurred."),
+     * )
+     *
+     * @Security(name="Bearer")
      */
     public function init(Request $request): Response
     {
@@ -54,7 +88,7 @@ class GarageController extends EndpointController
         try {
             $garage = $this->garageService->initGarage($this->getUser()->getId());
         } catch (Exception $e) {
-            return $this->buildNotFoundResponse(sprintf('An error occurred : %s', $e->getMessage()));
+            return $this->buildNotFoundResponse('An error occurred.');
         }
 
         $this->logger->info(sprintf('GarageController::create - Garage id : %s ignited for User %s', $garage->getId(), $user->getId()));

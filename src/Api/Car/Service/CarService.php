@@ -4,6 +4,8 @@ namespace App\Api\Car\Service;
 
 use App\Api\Car\Entity\Car;
 use App\Api\Car\Entity\CarPatchPayload;
+use App\Api\Car\Entity\Modifications;
+use App\Api\Car\Entity\ModificationsPatchPayload;
 use App\Api\Garage\Service\GarageService;
 use App\DependencyInjection\SecurityAwareTrait;
 use Doctrine\ORM\EntityManagerInterface;
@@ -26,7 +28,7 @@ class CarService
     /**
      * Creates a car from given data & persist it into database.
      *
-     * @param string $data
+     * @param array $data
      *  Data
      *
      * @throws Exception
@@ -34,14 +36,9 @@ class CarService
      * @return Car
      *  Car
      */
-    public function createCar(string $data): Car
+    public function createCar(array $data): Car
     {
-        $car = $this->serializer->deserialize(
-            $data,
-            Car::class,
-            'json',
-            ['groups' => 'create']
-        );
+        $car = new Car($data);
 
         // bind car to garage
         $garage = $this->garageService->getGarage($this->getUser()->getId());
@@ -64,6 +61,7 @@ class CarService
      *  Payload data
      * @param car $car
      *  Car to update
+     *
      * @throws Exception
      */
     public function updateCar(CarPatchPayload $payload, Car $car): Car
@@ -73,7 +71,6 @@ class CarService
             ->setBrand($payload->getBrand() ?? $car->getBrand())
             ->setModel($payload->getModel() ?? $car->getModel())
             ->setYear($payload->getYear() ?? $car->getYear())
-            ->setModifications($payload->getModifications() ?? $car->getModifications())
             ->setHorsePower($payload->getHorsePower() ?? $car->getHorsePower())
             ->setTorque($payload->getTorque() ?? $car->getTorque())
             ->setImage($payload->getImage() ?? $car->getImage())
@@ -88,5 +85,39 @@ class CarService
         }
 
         return $car;
+    }
+
+    /**
+     * Update modification.
+     *
+     * @param modificationsPatchPayload $payload
+     *  Payload data
+     * @param modifications $modification
+     *  Modification to update
+     *
+     * @throws Exception
+     */
+    public function updateModification(ModificationsPatchPayload $payload, Modifications $modification): Modifications
+    {
+        $modification
+            ->setType($payload->getType() ?? $modification->getType())
+            ->setManufacturerName($payload->getManufacturerName() ?? $modification->getManufacturerName())
+            ->setName($payload->getName() ?? $modification->getName())
+            ->setHorsePowerGain($payload->getHorsePowerGain() ?? $modification->getHorsePowerGain())
+            ->setTorqueGain($payload->getTorqueGain() ?? $modification->getTorqueGain())
+            ->setWeightGain($payload->getWeightGain() ?? $modification->getWeightGain())
+            ->setDescription($payload->getDescription() ?? $modification->getDescription())
+            ->setWebsite($payload->getWebsite() ?? $modification->getWebsite())
+            ->setCost($payload->getCost() ?? $modification->getCost())
+            ->setLaborCost($payload->getLaborCost() ?? $modification->getLaborCost())
+        ;
+
+        try {
+            $this->em->flush();
+        } catch (Exception $e) {
+            throw new Exception(sprintf('An error occurred : %s', $e->getMessage()));
+        }
+
+        return $modification;
     }
 }
