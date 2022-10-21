@@ -35,3 +35,7 @@ lando composer test-phpstan
 lando composer test-phpunit
 lando composer test-twig
 ```
+
+## Database structure
+
+![ERD Image](https://iili.io/tppGRf.png)
